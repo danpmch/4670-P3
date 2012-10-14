@@ -67,9 +67,9 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 
 			// (xt,yt,zt) are intermediate coordinates to which you can
 			// apply the spherical correction and radial distortion
-			float xt, yt;
+			float xt, yt, zt;
 			CVector3 p;
- 
+
 			// BEGIN TODO
 			// add code to apply the spherical correction, i.e.,
 			// compute the Euclidean coordinates, rotate according to
@@ -77,8 +77,24 @@ CFloatImage WarpSphericalField(CShape srcSh, CShape dstSh, float f,
 			// (xt/zt,yt/zt,1), then distort with radial distortion
 			// coefficients k1 and k2
 
-			// END TODO
+			//change to spherical coordinates
+			p[0] = sin(xf)*cos(yf);
+			p[1] = sin(yf);
+			p[2] = cos(xf)*cos(yf); 
 
+			//rotate by r
+			p = r * p;
+			
+			//normalize to z = 1 plane
+			xt = p[0]/p[2];
+			yt = p[1]/p[2];
+
+			//apply distortion
+			float r = xt*xt + yt*yt;
+			xt = xt*(1 + k1*r + k2*r*r);
+			yt = yt*(1 + k1*r + k2*r*r);
+
+			// END TODO
 	    
 			// Convert back to regular pixel coordinates and store
 			float xn = 0.5f*srcSh.width  + xt*f;
