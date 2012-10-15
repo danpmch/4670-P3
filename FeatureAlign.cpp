@@ -14,7 +14,9 @@
 #include "ImageLib/ImageLib.h"
 #include "FeatureAlign.h"
 #include <math.h>
+#include <assert.h>
 #include <iostream>
+#include <set>
 
 #include "Eigen/Core"
 #include "Eigen/SVD"
@@ -58,9 +60,21 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 		const Feature &a = f1[m.id1 - 1];
 		const Feature &b = f2[m.id2 - 1];
 
+
 		// BEGIN TODO
 		// fill in the matrix A in this loop.
 		// To access an element of A, use parentheses, e.g. A(0,0)
+
+    double x = a.x;
+    double y = a.y;
+
+    double xp = b.x;
+    double yp = b.y;
+    
+    int A_row = 2 * i;
+    A.row( A_row )     << x, y, 1, 0, 0, 0, -xp * x, -xp * y, -xp;
+    A.row( A_row + 1 ) << 0, 0, 0, x, y, 1, -yp * x, -yp * y, -yp;
+
 		// END TODO
 	}
 
@@ -70,11 +84,50 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 	// BEGIN TODO
 	// fill the homography H with the appropriate elements of the SVD
 	// To extract, for instance, the V matrix, use svd.matrixV()
-	// END TODO
+  
+  const double *H_vector = svd.matrixV().col( svd.matrixV().cols() - 1 ).data();
 	CTransform3x3 H;
+  for( int i = 0; i < 9; i++ )
+  {
+    *(H[ i ]) = H_vector[ i ];
+  }
+
+	// END TODO
 	return H;
 }
 
+CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
+								const vector<FeatureMatch> &matches)
+{
+  assert( matches.size() == 1 );
+
+  int fid1 = matches[ 0 ].id1;
+  int fid2 = matches[ 0 ].id2;
+  Feature feature1 = f1[ fid1 - 1 ];
+  Feature feature2 = f2[ fid2 - 1 ];
+
+  return CTransform3x3::Translation( feature2.x - feature1.x, feature2.y - feature1.y );
+}
+
+// returns a randomly selected subset of the input matches, with size determined by the MotionModel
+vector< FeatureMatch > get_random_matches( const vector< FeatureMatch > &matches, int num_matches )
+{
+  set< int > match_indices;
+
+  // generate set of random indices
+  srand( time( NULL ) );
+  while( match_indices.size() < num_matches )
+  {
+    int r = rand() % matches.size();
+    match_indices.insert( r );
+  }
+
+  vector< FeatureMatch > match_subset;
+  for( set< int >::iterator i = match_indices.begin(); i != match_indices.end(); i++ )
+    match_subset.push_back( matches[ *i ] );
+
+  return match_subset;
+}
 
 /******************* TO DO *********************
  * alignPair:
@@ -114,9 +167,67 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
     //  This function should also call countInliers and, at the end,
 	//  leastSquaresFit.
 
+  int num_matches = -1;
+  CTransform3x3 ( *transform_func )( const FeatureSet &, const FeatureSet &, const vector< FeatureMatch > & ) = NULL;
+
+  switch( m )
+  {
+    case eTranslate:
+      num_matches = 1;
+      transform_func = ComputeTranslation;
+      break;
+    case eHomography:
+      num_matches = 4;
+      transform_func = ComputeHomography;
+      break;
+    default:
+      // should never get here
+      assert( false );
+  }
+
+  vector< int > max;
+  int max_inliers = -1;
+  for( int n = 0; n < nRANSAC; n++ )
+  {
+    CTransform3x3 current = transform_func( f1, f2, get_random_matches( matches, num_matches ) );
+
+    vector< int > inlier_ids;
+    int num_inliers = countInliers( f1, f2, matches, m, current, RANSACthresh, inlier_ids );
+
+    if( num_inliers > max_inliers )
+    {
+      // TODO: verify that the CTransform3x3 operator= will do the right thing here
+      max_inliers = num_inliers;
+      max = inlier_ids;
+    }
+  }
+
+  leastSquaresFit(f1, f2, matches, m, max, M);
+
     // END TODO
 
 	return 0;
+}
+
+void perspectiveDivide( CVector3 v )
+{
+  if( v[ 2 ] != 1.0 )
+  {
+    v[ 0 ] /= v[ 2 ];
+    v[ 1 ] /= v[ 2 ];
+    v[ 2 ] /= v[ 2 ];
+  }
+}
+
+float distance2d( CVector3 v1, CVector3 v2 )
+{
+  perspectiveDivide( v1 );
+  perspectiveDivide( v2 );
+
+  float dx = v1[ 0 ] - v2[ 0 ];
+  float dy = v1[ 1 ] - v2[ 1 ];
+
+  return sqrt( dx * dx + dy * dy );
 }
 
 /******************* TO DO *********************
@@ -159,8 +270,22 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
         //        These ids are 1-based indices into the feature arrays,
         //        so you access the appropriate features as f1[id1-1] and f2[id2-1].
 		//
-		// END TODO
+    
+    Feature feature1 = f1[ matches[ i ].id1 - 1 ];
+    Feature feature2 = f2[ matches[ i ].id2 - 1 ];
+
+    CVector3 v1( feature1.x, feature1.y, 1 );
+    CVector3 v1_transformed = M * v1;
+
+    CVector3 v2( feature2.x, feature2.y, 1 );
+
+    if( distance2d( v1_transformed, v2 ) <= RANSACthresh )
+    {
+      inliers.push_back( i );
     }
+
+		// END TODO
+  }
 
     return (int) inliers.size();
 }
@@ -186,39 +311,52 @@ int leastSquaresFit(const FeatureSet &f1, const FeatureSet &f2,
 
     switch (m) {
 	    case eTranslate: {
-			// for spherically warped images, the transformation is a 
-			// translation and only has two degrees of freedom
-			//
-			// therefore, we simply compute the average translation vector
-			// between the feature in f1 and its match in f2 for all inliers
-			double u = 0;
-			double v = 0;
+        // for spherically warped images, the transformation is a 
+        // translation and only has two degrees of freedom
+        //
+        // therefore, we simply compute the average translation vector
+        // between the feature in f1 and its match in f2 for all inliers
+        double u = 0;
+        double v = 0;
 
-			for (int i=0; i < (int) inliers.size(); i++) {
-				// BEGIN TODO
-				// use this loop to compute the average translation vector
-				// over all inliers
-				// END TODO
-			}
+        for (int i=0; i < (int) inliers.size(); i++) {
+          // BEGIN TODO
+          // use this loop to compute the average translation vector
+          // over all inliers
+          
+          Feature feature1 = f1[ matches[ i ].id1 - 1 ];
+          Feature feature2 = f2[ matches[ i ].id2 - 1 ];
 
-			u /= inliers.size();
-			v /= inliers.size();
+          u += feature2.x - feature1.x;
+          v += feature2.y - feature1.y;
 
-			M = CTransform3x3::Translation((float) u, (float) v);
+          // END TODO
+        }
 
-			break;
-		} 
+        u /= inliers.size();
+        v /= inliers.size();
 
-		case eHomography: {
-			M = CTransform3x3();
+        M = CTransform3x3::Translation((float) u, (float) v);
 
-			// BEGIN TODO
-			// Compute a homography M using all inliers.
-			// This should call ComputeHomography.
-			// END TODO
+        break;
+      } 
 
-			break;
-		}
+      case eHomography: {
+        // BEGIN TODO
+        // Compute a homography M using all inliers.
+        // This should call ComputeHomography.
+        
+        vector< FeatureMatch > match_subset;
+        for( int i = 0; i < inliers.size(); i++ )
+        {
+          match_subset.push_back( matches[ inliers[ i ] ] );
+        }
+
+        M = ComputeHomography( f1, f2, match_subset );
+        // END TODO
+
+        break;
+      }
     }
 
     return 0;
