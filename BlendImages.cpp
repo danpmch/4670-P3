@@ -119,6 +119,29 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
         // BEGIN TODO
 		// add some code here to update min_x, ..., max_y
 
+        // iterate over the set of image corners (0,0), (width - 1, 0), (0, height - 1), (width - 1, height - 1)
+        for( int row = 0; row < width; row += width - 1 )
+        {
+          for( int col = 0; col < height; col += height - 1 )
+          {
+            // project corner into panorama space
+            CVector3 corner = T * CVector3( row, col, 1 );
+
+            // update x coords
+            if( corner[ 0 ] < min_x )
+              min_x = corner[ 0 ];
+            else if( corner[ 0 ] > max_x )
+              max_x = corner[ 0 ];
+
+            // update y coords
+            if( corner[ 1 ] < min_y )
+              min_y = corner[ 1 ];
+            else if( corner[ 1 ] > max_y )
+              max_y = corner[ 1 ];
+
+          }
+        }
+
 		// END TODO
     }
 
