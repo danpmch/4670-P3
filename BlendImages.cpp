@@ -74,14 +74,15 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
  */
 static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
 {
-    // BEGIN TODO
-    // fill in this routine..
+  // BEGIN TODO
+  // fill in this routine..
 
   int width = acc.Shape().width;
   int height = acc.Shape().height;
   int bands = acc.Shape().nBands;
 
-  assert( bands == img.Shape().nBands );
+  // following code assumes this is true, but specification doesn't explicitly say it
+  assert( acc.Shape() == img.Shape() );
 
   // for each pixel in the input image
   for( int row = 0; row < width; row++ )
@@ -101,7 +102,7 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
     }
   }
 
-    // END TODO
+  // END TODO
 }
 
 
