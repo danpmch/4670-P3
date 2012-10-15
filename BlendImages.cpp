@@ -27,6 +27,7 @@
 #include "BlendImages.h"
 #include <float.h>
 #include <math.h>
+#include <assert.h>
 
 #define MAX(x,y) (((x) < (y)) ? (y) : (x))
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
@@ -75,7 +76,30 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
 {
     // BEGIN TODO
     // fill in this routine..
-        
+
+  int width = acc.Shape().width;
+  int height = acc.Shape().height;
+  int bands = acc.Shape().nBands;
+
+  assert( bands == img.Shape().nBands );
+
+  // for each pixel in the input image
+  for( int row = 0; row < width; row++ )
+  {
+    for( int col = 0; col < height; col++ )
+    {
+      // get alpha value of pixel
+      float alpha = acc.Pixel( row, col, bands - 1 );
+
+      // normalize each channel of pixel (including alpha, since output should be opaque),
+      // and store in output image
+      for( int channel = 0; channel < bands; channel++ )
+      {
+        float val = acc.Pixel( row, col, channel );
+        img.Pixel( row, col, channel ) = val / alpha;
+      }
+    }
+  }
 
     // END TODO
 }
