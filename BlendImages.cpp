@@ -28,6 +28,7 @@
 #include <float.h>
 #include <math.h>
 #include <assert.h>
+#include <cstdio>
 
 #define MAX(x,y) (((x) < (y)) ? (y) : (x))
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
@@ -59,6 +60,21 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 	// BEGIN TODO
 	// Fill in this routine
 
+	CFloatImage img2( img.Shape() );
+	for( int row = 0; row < img.Shape().width; row++ )
+	{
+		for( int col = 0; col < img.Shape().height; col++ )
+		{
+			for( int channel = 0; channel < img.Shape().nBands; channel++ )
+			{
+				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel );
+			}
+		}
+	}
+
+	CTransform3x3 M_inv = M.Inverse();
+	WarpGlobal( img2, acc, M_inv, eWarpInterpLinear, 1.0f);
+
 	// END TODO
 }
 
@@ -79,11 +95,10 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
 
   int width = acc.Shape().width;
   int height = acc.Shape().height;
-  int bands = acc.Shape().nBands;
-  int alpha_channel = acc.alphaChannel;
+  int acc_bands = acc.Shape().nBands;
+  int img_bands = img.Shape().nBands;
 
-  // following code assumes this is true, but specification doesn't explicitly say it
-  assert( acc.Shape() == img.Shape() );
+  printf( "acc bands: %d,  img bands: %d\n", acc_bands, img_bands );
 
   // for each pixel in the input image
   for( int row = 0; row < width; row++ )
@@ -91,11 +106,11 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
     for( int col = 0; col < height; col++ )
     {
       // get alpha value of pixel
-      float alpha = acc.Pixel( row, col, alpha_channel );
+      float alpha = acc.Pixel( row, col, 3 );
 
       // normalize each channel of pixel (including alpha, since output should be opaque),
       // and store in output image
-      for( int channel = 0; channel < bands; channel++ )
+      for( int channel = 0; channel < img_bands; channel++ )
       {
         float val = acc.Pixel( row, col, channel );
         img.Pixel( row, col, channel ) = val / alpha;
