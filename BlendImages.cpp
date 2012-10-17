@@ -28,6 +28,7 @@
 #include <float.h>
 #include <math.h>
 #include <assert.h>
+#include <cstdio>
 
 #define MAX(x,y) (((x) < (y)) ? (y) : (x))
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
@@ -59,20 +60,40 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 	// BEGIN TODO
 	// Fill in this routine
 
+  // convert CByteImage to alpha premultiplied CFloatImage
 	CFloatImage img2( img.Shape() );
 	for( int row = 0; row < img.Shape().width; row++ )
 	{
 		for( int col = 0; col < img.Shape().height; col++ )
 		{
-			for( int channel = 0; channel < img.Shape().nBands; channel++ )
+      // extract and store alpha value in img2
+      float alpha = img.Pixel( row, col, 3 ) / 255.0;
+      img2.Pixel( row, col, 3 ) = alpha;
+
+      // store alpha premultiplied rgb values in img2
+			for( int channel = 0; channel < img.Shape().nBands - 1; channel++ )
 			{
-				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel );
+				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel ) * alpha / 255.0;
 			}
 		}
 	}
 
+  // store the warped image in a temporary image
+  CFloatImage tmp( acc.Shape() );
 	CTransform3x3 M_inv = M.Inverse();
-	WarpGlobal( img2, acc, M_inv, eWarpInterpLinear, 1.0f);
+	WarpGlobal( img2, tmp, M_inv, eWarpInterpLinear, 1.0f);
+
+  // add result into acc
+  for( int row = 0; row < acc.Shape().width; row++ )
+  {
+    for( int col = 0; col < acc.Shape().height; col++ )
+    {
+      for( int channel = 0; channel < acc.Shape().nBands; channel++ )
+      {
+        acc.Pixel( row, col, channel ) += tmp.Pixel( row, col, channel );
+      }
+    }
+  }
 
 	// END TODO
 }
@@ -94,10 +115,8 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
 
   int width = acc.Shape().width;
   int height = acc.Shape().height;
-  int bands = acc.Shape().nBands;
-
-  // following code assumes this is true, but specification doesn't explicitly say it
-  assert( acc.Shape() == img.Shape() );
+  int acc_bands = acc.Shape().nBands;
+  int img_bands = img.Shape().nBands;
 
   // for each pixel in the input image
   for( int row = 0; row < width; row++ )
@@ -105,15 +124,17 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
     for( int col = 0; col < height; col++ )
     {
       // get alpha value of pixel
-      float alpha = acc.Pixel( row, col, bands - 1 );
+      float alpha = acc.Pixel( row, col, 3 );
 
-      // normalize each channel of pixel (including alpha, since output should be opaque),
-      // and store in output image
-      for( int channel = 0; channel < bands; channel++ )
+      // normalize rgb channels of pixel
+      for( int channel = 0; channel < 3; channel++ )
       {
         float val = acc.Pixel( row, col, channel );
-        img.Pixel( row, col, channel ) = val / alpha;
+        img.Pixel( row, col, channel ) = ( alpha != 0 ) ? val / alpha * 255.0 : 0.0;
       }
+
+      // set pixel to be opaque
+      img.Pixel( row, col, 3 ) = 255;
     }
   }
 

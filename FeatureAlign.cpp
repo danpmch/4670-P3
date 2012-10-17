@@ -89,13 +89,21 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
   
   const double *H_vector = svd.matrixV().col( svd.matrixV().cols() - 1 ).data();
 	CTransform3x3 H;
-  for( int i = 0; i < 9; i++ )
-  {
-    *(H[ i ]) = H_vector[ i ];
-  }
+  for( int row = 0; row < 3; row++ )
+    for( int col = 0; col < 3; col++ )
+      H[ row ][ col ] = H_vector[ row * 3 + col ];
 
 	// END TODO
 	return H;
+}
+
+void print_transform( CTransform3x3 &t )
+{
+  printf( "[ " );
+  for( int row = 0; row < 3; row++ )
+    for( int col = 0; col < 3; col++ )
+      printf( "%f, ", t[ row ][ col ] );
+  printf( "] " );
 }
 
 CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
@@ -110,7 +118,11 @@ CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
   Feature feature1 = f1[ fid1 - 1 ];
   Feature feature2 = f2[ fid2 - 1 ];
   cout << "here" << endl;
-  return CTransform3x3::Translation( feature2.x - feature1.x, feature2.y - feature1.y );
+  int tx = feature2.x - feature1.x;
+  int ty = feature2.y - feature1.y;
+  CTransform3x3 trans = CTransform3x3::Translation( tx, ty );
+
+  return trans;
 }
 
 // returns a randomly selected subset of the input matches, with size determined by the MotionModel
@@ -120,7 +132,6 @@ vector< FeatureMatch > get_random_matches( const vector< FeatureMatch > &matches
   set< int > match_indices;
 
   // generate set of random indices
-  srand( time( NULL ) );
   cout << "num matches = "<< num_matches << endl;
   while( match_indices.size() < num_matches )
   {
@@ -197,7 +208,7 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   }
 
   vector< int > max;
-  int max_inliers = -1;
+  srand( time( NULL ) );
   for( int n = 0; n < nRANSAC; n++ )
   {
 	cout << "transforming" << endl;
@@ -205,15 +216,18 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 
     vector< int > inlier_ids;
     int num_inliers = countInliers( f1, f2, matches, m, current, RANSACthresh, inlier_ids );
+//    printf( "inliers for current: %d\n", num_inliers );
 
-    if( num_inliers > max_inliers )
+    if( num_inliers > max.size() )
     {
-      // TODO: verify that the CTransform3x3 operator= will do the right thing here
-      max_inliers = num_inliers;
       max = inlier_ids;
+//      printf( "New Transform: " ); print_transform( current ); puts( "" );
+//      printf( "Max inliers: %d\n", max.size() );
     }
   }
-  cout << "leastSquaresFit" << endl;
+  printf( "Total matches: %d\n", matches.size() );
+  printf( "Maximum inliers: %d\n", max.size() );
+
   leastSquaresFit(f1, f2, matches, m, max, M);
 
     // END TODO
@@ -291,6 +305,11 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
 
     CVector3 v2( feature2.x, feature2.y, 1 );
 
+    printf( "v1: (%f, %f)\n", v1[ 0 ], v1[ 1 ] );
+    printf( "M: " ); print_transform( M ); puts("");
+    printf( "v1_trans: (%f, %f)\n", v1_transformed[ 0 ], v1_transformed[ 1 ] );
+    printf( "v2: (%f, %f)\n", v2[ 0 ], v2[ 1 ] );
+    printf( "Distance: %f\n", distance2d( v1_transformed, v2 ) );
     if( distance2d( v1_transformed, v2 ) <= RANSACthresh )
     {
       inliers.push_back( i );
