@@ -208,7 +208,7 @@ void FeatureSet::select_point(int x, int y) {
 		// If the given point is within 5 pixels of the feature, then
 		// select it.  This can select multiple features if they are
 		// nearly collocated.
-		if ((fabs((*i).x-x) <= 3) && (fabs((*i).y-y) <= 3)) {
+		if ((fabs((double)(*i).x-x) <= 3) && (fabs((double)(*i).y-y) <= 3)) {
 			(*i).selected = (!(*i).selected);
 		}
 

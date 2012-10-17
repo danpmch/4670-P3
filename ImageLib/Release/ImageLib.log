@@ -1,5 +1,26 @@
-﻿Build started 10/3/2012 9:11:36 PM.
+﻿Build started 10/15/2012 10:34:50 PM.
+     1>Project "C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\ImageLib.vcxproj" on node 2 (Build target(s)).
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Ob1 /Oy- /D WIN32 /D NDEBUG /D _LIB /D _CRT_SECURE_NO_WARNINGS /D _VC80_UPGRADE=0x0710 /D _MBCS /GF /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Release/" /Fd".\Release/vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Convert.cpp Convolve.cpp FileIO.cpp Image.cpp Pyramid.cpp RefCntMem.cpp Transform.cpp WarpImage.cpp
+         Convert.cpp
+         Convolve.cpp
+         FileIO.cpp
+         Image.cpp
+         Pyramid.cpp
+         RefCntMem.cpp
+         Transform.cpp
+         WarpImage.cpp
+         Generating Code...
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\Lib.exe /OUT:".\Release\ImageLib.lib" /NOLOGO .\Release/Convert.obj
+         .\Release/Convolve.obj
+         .\Release/FileIO.obj
+         .\Release/Image.obj
+         .\Release/Pyramid.obj
+         .\Release/RefCntMem.obj
+         .\Release/Transform.obj
+         .\Release/WarpImage.obj
+         ImageLib.vcxproj -> C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\.\Release\ImageLib.lib
+     1>Done Building Project "C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\ImageLib.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.02
+Time Elapsed 00:00:04.98

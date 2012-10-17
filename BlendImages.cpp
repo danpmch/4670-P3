@@ -59,6 +59,21 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 	// BEGIN TODO
 	// Fill in this routine
 
+	CFloatImage img2( img.Shape() );
+	for( int row = 0; row < img.Shape().width; row++ )
+	{
+		for( int col = 0; col < img.Shape().height; col++ )
+		{
+			for( int channel = 0; channel < img.Shape().nBands; channel++ )
+			{
+				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel );
+			}
+		}
+	}
+
+	CTransform3x3 M_inv = M.Inverse();
+	WarpGlobal( img2, acc, M_inv, eWarpInterpLinear, 1.0f);
+
 	// END TODO
 }
 
