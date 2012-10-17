@@ -80,6 +80,7 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
   int width = acc.Shape().width;
   int height = acc.Shape().height;
   int bands = acc.Shape().nBands;
+  int alpha_channel = acc.alphaChannel;
 
   // following code assumes this is true, but specification doesn't explicitly say it
   assert( acc.Shape() == img.Shape() );
@@ -90,7 +91,7 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
     for( int col = 0; col < height; col++ )
     {
       // get alpha value of pixel
-      float alpha = acc.Pixel( row, col, bands - 1 );
+      float alpha = acc.Pixel( row, col, alpha_channel );
 
       // normalize each channel of pixel (including alpha, since output should be opaque),
       // and store in output image
