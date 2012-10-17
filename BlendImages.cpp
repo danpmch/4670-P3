@@ -60,20 +60,41 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 	// BEGIN TODO
 	// Fill in this routine
 
+  // convert CByteImage to alpha premultiplied CFloatImage
 	CFloatImage img2( img.Shape() );
 	for( int row = 0; row < img.Shape().width; row++ )
 	{
 		for( int col = 0; col < img.Shape().height; col++ )
 		{
-			for( int channel = 0; channel < img.Shape().nBands; channel++ )
+      // extract and store alpha value in img2
+      float alpha = img.Pixel( row, col, 3 ) / 255.0;
+      img2.Pixel( row, col, 3 ) = alpha;
+
+      // store alpha premultiplied rgb values in img2
+			for( int channel = 0; channel < img.Shape().nBands - 1; channel++ )
 			{
-				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel );
+        printf( "Input image channel %d: %d\n", channel, img.Pixel( row, col, channel ) );
+				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel ) * alpha / 255.0;
 			}
 		}
 	}
 
+  // store the warped image in a temporary image
+  CFloatImage tmp( acc.Shape() );
 	CTransform3x3 M_inv = M.Inverse();
-	WarpGlobal( img2, acc, M_inv, eWarpInterpLinear, 1.0f);
+	WarpGlobal( img2, tmp, M_inv, eWarpInterpLinear, 1.0f);
+
+  // add result into acc
+  for( int row = 0; row < acc.Shape().width; row++ )
+  {
+    for( int col = 0; col < acc.Shape().height; col++ )
+    {
+      for( int channel = 0; channel < acc.Shape().nBands; channel++ )
+      {
+        acc.Pixel( row, col, channel ) += tmp.Pixel( row, col, channel );
+      }
+    }
+  }
 
 	// END TODO
 }
@@ -108,13 +129,17 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
       // get alpha value of pixel
       float alpha = acc.Pixel( row, col, 3 );
 
-      // normalize each channel of pixel (including alpha, since output should be opaque),
-      // and store in output image
-      for( int channel = 0; channel < img_bands; channel++ )
+      // normalize rgb channels of pixel
+      for( int channel = 0; channel < 3; channel++ )
       {
         float val = acc.Pixel( row, col, channel );
-        img.Pixel( row, col, channel ) = val / alpha;
+        img.Pixel( row, col, channel ) = ( alpha != 0 ) ? val / alpha * 255.0 : 0.0;
+
+        printf( "channel %d: %f --> %d\n", channel, val, img.Pixel( row, col, channel ) );
       }
+
+      // set pixel to be opaque
+      img.Pixel( row, col, 3 ) = 255;
     }
   }
 
@@ -191,6 +216,8 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
                   (int)(ceil(max_y) - floor(min_y)), nBands + 1);
     CFloatImage accumulator(mShape);
     accumulator.ClearPixels();
+
+    printf( "x range: (%f, %f),  y range: (%f, %f),  dimensions( %d, %d )\n", min_x, max_x, min_y, max_y, mShape.width, mShape.height );
 
     double x_init, x_final;
     double y_init, y_final;
