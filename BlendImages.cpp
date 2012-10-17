@@ -73,7 +73,6 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
       // store alpha premultiplied rgb values in img2
 			for( int channel = 0; channel < img.Shape().nBands - 1; channel++ )
 			{
-        printf( "Input image channel %d: %d\n", channel, img.Pixel( row, col, channel ) );
 				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel ) * alpha / 255.0;
 			}
 		}
@@ -119,8 +118,6 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
   int acc_bands = acc.Shape().nBands;
   int img_bands = img.Shape().nBands;
 
-  printf( "acc bands: %d,  img bands: %d\n", acc_bands, img_bands );
-
   // for each pixel in the input image
   for( int row = 0; row < width; row++ )
   {
@@ -134,8 +131,6 @@ static void NormalizeBlend(CFloatImage& acc, CByteImage& img)
       {
         float val = acc.Pixel( row, col, channel );
         img.Pixel( row, col, channel ) = ( alpha != 0 ) ? val / alpha * 255.0 : 0.0;
-
-        printf( "channel %d: %f --> %d\n", channel, val, img.Pixel( row, col, channel ) );
       }
 
       // set pixel to be opaque
@@ -216,8 +211,6 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
                   (int)(ceil(max_y) - floor(min_y)), nBands + 1);
     CFloatImage accumulator(mShape);
     accumulator.ClearPixels();
-
-    printf( "x range: (%f, %f),  y range: (%f, %f),  dimensions( %d, %d )\n", min_x, max_x, min_y, max_y, mShape.width, mShape.height );
 
     double x_init, x_final;
     double y_init, y_final;
