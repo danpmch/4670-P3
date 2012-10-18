@@ -19,13 +19,13 @@ MATCH_FILE="match-$WARP_NAME1-$WARP_NAME2.txt"
 
 ./Features matchFeatures $WARP_NAME1.f $WARP_NAME2.f 0.8 $MATCH_FILE 2
 
-./Panorama alignPair $WARP_NAME1.f $WARP_NAME2.f $MATCH_FILE 2000 1
-#MATRIX="`./Panorama alignPair $WARP_NAME1.f $WARP_NAME2.f $MATCH_FILE 200 1`"
-#echo $MATRIX
+#./Panorama alignPair $WARP_NAME1.f $WARP_NAME2.f $MATCH_FILE 200 1
+MATRIX="`./Panorama alignPair $WARP_NAME1.f $WARP_NAME2.f $MATCH_FILE 200 1`"
+echo $MATRIX
 
 # create pairlist file for blendPairs
-#PAIRLIST="pairlist-$WARP_NAME1-$WARP_NAME2.txt"
-#echo "$WARP_NAME1.tga $WARP_NAME2.tga $MATRIX" > $PAIRLIST
+PAIRLIST="pairlist-$WARP_NAME1-$WARP_NAME2.txt"
+echo "$WARP_NAME1.tga $WARP_NAME2.tga $MATRIX" > $PAIRLIST
 
-#./Panorama blendPairs $PAIRLIST stitch2.tga 200
+./Panorama blendPairs $PAIRLIST stitch2.tga 200
 #./Panorama blendPairs pairlist2.txt stitch2.tga 200

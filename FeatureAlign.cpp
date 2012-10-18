@@ -132,6 +132,7 @@ vector< FeatureMatch > get_random_matches( const vector< FeatureMatch > &matches
   {
     int r = rand() % matches.size();
     match_indices.insert( r );
+//    printf( "Using match %d\n", r );
   }
 
   vector< FeatureMatch > match_subset;
@@ -214,8 +215,10 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 //      printf( "Max inliers: %d\n", max.size() );
     }
   }
+  /*
   printf( "Total matches: %d\n", matches.size() );
   printf( "Maximum inliers: %d\n", max.size() );
+  */
 
   leastSquaresFit(f1, f2, matches, m, max, M);
 
@@ -294,11 +297,13 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
 
     CVector3 v2( feature2.x, feature2.y, 1 );
 
+    /*
     printf( "v1: (%f, %f)\n", v1[ 0 ], v1[ 1 ] );
     printf( "M: " ); print_transform( M ); puts("");
     printf( "v1_trans: (%f, %f)\n", v1_transformed[ 0 ], v1_transformed[ 1 ] );
     printf( "v2: (%f, %f)\n", v2[ 0 ], v2[ 1 ] );
     printf( "Distance: %f\n", distance2d( v1_transformed, v2 ) );
+    */
     if( distance2d( v1_transformed, v2 ) <= RANSACthresh )
     {
       inliers.push_back( i );
