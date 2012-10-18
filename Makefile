@@ -7,8 +7,8 @@ IMAGELIB=ImageLib/libImage.a
 UNAME := $(shell uname)
 # Flags for Linux
 ifeq ($(UNAME), Linux)
-LIBS = -L$(HOME)/local/lib -lfltk_images -lpng -ljpeg -lfltk -L/usr/X11R6/lib -lX11
-CFLAGS = -g 
+LIBS = -L$(HOME)/local/lib -lfltk_images -lpng -ljpeg -lfltk -L/usr/X11R6/lib -lX11 -L/usr/lib/fltk-1
+CFLAGS = -g -I/usr/include/fltk-1 
 endif
 # Flags for OSX
 ifeq ($(UNAME), Darwin)
@@ -26,6 +26,9 @@ all: Panorama
 
 Panorama: $(OBJS) $(IMAGELIB)
 	g++ -o $@ $(CFLAGS) $(LIBS) $(OBJS) $(IMAGELIB)
+
+PanoramaMain.o: PanoramaMain.cpp
+	g++ -c PanoramaMain.cpp $(CFLAGS) $(LIBS)
 
 $(IMAGELIB): 
 	make -C ImageLib

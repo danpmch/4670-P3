@@ -1,7 +1,7 @@
 #!/bin/bash
 
-IMG1="warp08.tga"
-IMG2="warp09.tga"
+IMG1="pano1_0010.tga"
+IMG2="pano1_0011.tga"
 
 NAME1=`echo $IMG1 | cut -d '.' -f 1`
 NAME2=`echo $IMG2 | cut -d '.' -f 1`
@@ -15,16 +15,19 @@ WARP_NAME2=$NAME2 #"${NAME2}_warped"
 #./Features computeFeatures $WARP_NAME1.tga $WARP_NAME1.f
 #./Features computeFeatures $WARP_NAME2.tga $WARP_NAME2.f
 
-MATCH_FILE="match-$WARP_NAME1-$WARP_NAME2.txt"
-./Features matchSIFTFeatures $WARP_NAME1.key $WARP_NAME2.key 0.8 $MATCH_FILE 2
+MATCH_FILE="match-$NAME1-$NAME2.txt"
+./Features matchSIFTFeatures $NAME1.key $NAME2.key 0.8 $MATCH_FILE 2
 
-./Panorama alignPairHomography $WARP_NAME1.key $WARP_NAME2.key $MATCH_FILE 200 1 sift
-#MATRIX="`./Panorama alignPair $WARP_NAME1.key $WARP_NAME2.key $MATCH_FILE 200 1 sift`"
+NRANSAC="10000"
+./Panorama alignPairHomography $NAME1.key $NAME2.key $MATCH_FILE $NRANSAC 1 sift
+#MATRIX="`./Panorama alignPairHomography $NAME1.key $NAME2.key $MATCH_FILE $NRANSAC 1 sift`"
 #echo $MATRIX
 
 # create pairlist file for blendPairs
-#PAIRLIST="pairlist-$WARP_NAME1-$WARP_NAME2.txt"
-#echo "$WARP_NAME1.tga $WARP_NAME2.tga $MATRIX" > $PAIRLIST
+#PAIRLIST="pairlist-$NAME1-$NAME2.txt"
+#echo "$NAME1.tga $NAME2.tga $MATRIX" > $PAIRLIST
 
 #./Panorama blendPairs $PAIRLIST stitch2.tga 200
+#feh stitch2.tga
+
 ./Panorama blendPairs pairlist2.txt stitch2.tga 200

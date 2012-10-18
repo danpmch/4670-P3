@@ -33,6 +33,12 @@
 #define MAX(x,y) (((x) < (y)) ? (y) : (x))
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
 
+//#define DEBUG
+#ifndef DEBUG
+  #define printf( ... ) ;
+  #define puts( x ) ;
+#endif
+
 // Return the closest integer to x, rounding up
 static int iround(double x) {
     if (x < 0.0) {
@@ -359,6 +365,7 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
 
     if( is360 )
     {
+      printf( "SHEARING!!!\n" );
       CVector3 top1 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ 0 ].position * CVector3( 0, 0, 1 );
       printf( "top1: ( %f, %f )\n", top1[ 0 ], top1[ 1 ] );
       CVector3 top2 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ ipv.size() - 1 ].position * CVector3( 0, 0, 1 );

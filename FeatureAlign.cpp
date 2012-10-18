@@ -52,6 +52,7 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
 	int numMatches = (int) matches.size();
+  printf( "NumMatches: %d\n", numMatches );
   assert( numMatches >= 4 );
 
 	// first, we will compute the A matrix in the homogeneous linear equations Ah = 0
@@ -104,6 +105,10 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
   */
 
   const MatrixType V = svd.matrixV();
+  /*
+  const VectorXd col = V.col( svd.nonzeroSingularValues() - 1 );
+  assert( col.magnitude() == 1.0 );
+  */
 
 	CTransform3x3 H;
   double last_val = V( 8, svd.nonzeroSingularValues() - 1 );
@@ -245,7 +250,7 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 	return 0;
 }
 
-void perspectiveDivide( CVector3 v )
+void perspectiveDivide( CVector3 &v )
 {
   if( v[ 2 ] != 1.0 )
   {
@@ -255,7 +260,7 @@ void perspectiveDivide( CVector3 v )
   }
 }
 
-float distance2d( CVector3 v1, CVector3 v2 )
+float distance2d( CVector3 &v1, CVector3 &v2 )
 {
   perspectiveDivide( v1 );
   perspectiveDivide( v2 );
@@ -313,19 +318,23 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
     CVector3 v1( feature1.x, feature1.y, 1 );
     CVector3 v1_transformed = M * v1;
 
+
     CVector3 v2( feature2.x, feature2.y, 1 );
 
     /*
-    printf( "v1: (%f, %f)\n", v1[ 0 ], v1[ 1 ] );
+    printf( "v1: (%f, %f, %f)\n", v1[ 0 ], v1[ 1 ], v1[ 2 ] );
     printf( "M: " ); print_transform( M ); puts("");
-    printf( "v1_trans: (%f, %f)\n", v1_transformed[ 0 ], v1_transformed[ 1 ] );
-    printf( "v2: (%f, %f)\n", v2[ 0 ], v2[ 1 ] );
+    printf( "v1_transformed: (%f,%f,%f)\n", v1_transformed[ 0 ], v1_transformed[ 1 ], v1_transformed[ 2 ] );
+    printf( "v2: (%f,%f,%f)\n", v2[ 0 ], v2[ 1 ], v2[ 2 ] );
     printf( "Distance: %f\n", distance2d( v1_transformed, v2 ) );
     */
+
     if( distance2d( v1_transformed, v2 ) <= RANSACthresh )
     {
       inliers.push_back( i );
     }
+
+    //printf( "v1_trans_normalized: (%f, %f, %f)\n", v1_transformed[ 0 ], v1_transformed[ 1 ], v1_transformed[ 2 ] );
 
 		// END TODO
   }
