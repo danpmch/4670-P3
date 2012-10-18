@@ -4,7 +4,7 @@
     <LocalDebuggerCommandArguments> alignPairHomography pano1_0008.f pano1_0009.f matches_89.txt 1000 4.0</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerWorkingDirectory>c:\snavely\work\teaching\12Fa-CS4670\projects\p3_panoramas\PanoramaSolution\Panorama\images</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\Debug</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

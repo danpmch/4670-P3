@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <iostream>
 #include <set>
+#include <time.h>
 
 #include "Eigen/Core"
 #include "Eigen/SVD"
@@ -51,6 +52,7 @@ using namespace Eigen;
 CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
+	cout << "ComputeHomography" << endl;
 	int numMatches = (int) matches.size();
   printf( "NumMatches: %d\n", numMatches );
   assert( numMatches >= 4 );
@@ -132,13 +134,15 @@ void print_transform( CTransform3x3 &t )
 CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
+	cout << "ComputeTranslation" << endl;
   assert( matches.size() == 1 );
+	cout << "matches.size == 1" << endl;
 
   int fid1 = matches[ 0 ].id1;
   int fid2 = matches[ 0 ].id2;
   Feature feature1 = f1[ fid1 - 1 ];
   Feature feature2 = f2[ fid2 - 1 ];
-
+  cout << "here" << endl;
   int tx = feature2.x - feature1.x;
   int ty = feature2.y - feature1.y;
   CTransform3x3 trans = CTransform3x3::Translation( tx, ty );
@@ -149,13 +153,18 @@ CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
 // returns a randomly selected subset of the input matches, with size determined by the MotionModel
 vector< FeatureMatch > get_random_matches( const vector< FeatureMatch > &matches, int num_matches )
 {
+	cout << "get_random_matches" << endl;
   set< int > match_indices;
 
   // generate set of random indices
+  cout << "num matches = "<< num_matches << endl;
   while( match_indices.size() < num_matches )
   {
+	cout << "match_indices.size() = " <<  match_indices.size() << endl;
+	cout << "matches.size() = " <<  matches.size() << endl;
     int r = rand() % matches.size();
-    match_indices.insert( r );
+	cout << "r = " << r << endl;
+	match_indices.insert( r );
 //    printf( "Using match %d\n", r );
   }
 
@@ -206,14 +215,16 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 
   int num_matches = -1;
   CTransform3x3 ( *transform_func )( const FeatureSet &, const FeatureSet &, const vector< FeatureMatch > & ) = NULL;
-
+  
   switch( m )
   {
     case eTranslate:
+		cout << "eTranslate" << endl;
       num_matches = 1;
       transform_func = ComputeTranslation;
       break;
     case eHomography:
+		cout << "ehomography" << endl;
       num_matches = 4;
       transform_func = ComputeHomography;
       break;
@@ -226,6 +237,7 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   srand( time( NULL ) );
   for( int n = 0; n < nRANSAC; n++ )
   {
+	cout << "transforming" << endl;
     CTransform3x3 current = transform_func( f1, f2, get_random_matches( matches, num_matches ) );
 //    printf( "Transform: " ); print_transform( current ); puts( "" );
 

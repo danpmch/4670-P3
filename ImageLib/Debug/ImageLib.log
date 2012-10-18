@@ -1,9 +1,26 @@
-﻿Build started 10/3/2012 9:11:26 PM.
-     1>Project "C:\snavely\work\teaching\12Fa-CS4670\projects\p3_panoramas\PanoramaSkeleton\ImageLib\ImageLib.vcxproj" on node 2 (clean target(s)).
-     1>_PrepareForClean:
-         Deleting file ".\Debug\ImageLib.lastbuildstate".
-     1>Done Building Project "C:\snavely\work\teaching\12Fa-CS4670\projects\p3_panoramas\PanoramaSkeleton\ImageLib\ImageLib.vcxproj" (clean target(s)).
+﻿Build started 10/15/2012 10:40:11 PM.
+     1>Project "C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\ImageLib.vcxproj" on node 2 (Build target(s)).
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _LIB /D _CRT_SECURE_NO_WARNINGS /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm- /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo".\Debug/" /Fd".\Debug/vc100.pdb" /Gd /TP /analyze- /errorReport:prompt Convert.cpp Convolve.cpp FileIO.cpp Image.cpp Pyramid.cpp RefCntMem.cpp Transform.cpp WarpImage.cpp
+         Convert.cpp
+         Convolve.cpp
+         FileIO.cpp
+         Image.cpp
+         Pyramid.cpp
+         RefCntMem.cpp
+         Transform.cpp
+         WarpImage.cpp
+         Generating Code...
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\Lib.exe /OUT:".\Debug\ImageLib.lib" /NOLOGO .\Debug/Convert.obj
+         .\Debug/Convolve.obj
+         .\Debug/FileIO.obj
+         .\Debug/Image.obj
+         .\Debug/Pyramid.obj
+         .\Debug/RefCntMem.obj
+         .\Debug/Transform.obj
+         .\Debug/WarpImage.obj
+         ImageLib.vcxproj -> C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\.\Debug\ImageLib.lib
+     1>Done Building Project "C:\Users\Joey\Documents\CS4670\P3\Repo\4670-P3\ImageLib\ImageLib.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.05
+Time Elapsed 00:00:02.56
