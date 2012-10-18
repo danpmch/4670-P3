@@ -83,28 +83,40 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 
 		// END TODO
 	}
-  cout << "A: " << endl;
-  cout << A << endl << endl;
+//  cout << "A: " << endl;
+//  cout << A << endl << endl;
 
 	// compute the svd of A using the Eigen package
-	JacobiSVD<MatrixType> svd(A, ComputeFullV);
+	JacobiSVD<MatrixType> svd(A, ComputeFullV | ComputeFullU);
 
 	// BEGIN TODO
 	// fill the homography H with the appropriate elements of the SVD
 	// To extract, for instance, the V matrix, use svd.matrixV()
 
+  /*
   cout << "Singular values?" << endl;
   cout << svd.singularValues() << endl;
-  
+  cout << "Non-zero singular values: " << svd.nonzeroSingularValues() << endl;
+
+  float smallest = svd.singularValues()[ svd.nonzeroSingularValues() - 1 ];
+  cout << "Smallest singular value: " << smallest << endl;
+  */
+
   const MatrixType V = svd.matrixV();
-  cout << "V: " << endl;
-  cout << V << endl;
+//  cout << "V: " << endl;
+//  cout << V << endl;
+
+  /*
+  Matrix< double, 9, 1 > soln( svd.solve( VectorXd::Zero( A.rows() ) ) );
+  cout << "Solution?" << endl;
+  cout << soln << endl;
+  */
 
 	CTransform3x3 H;
-  double last_val = V( 8, 7 );
+  double last_val = V( 8, svd.nonzeroSingularValues() - 1 );
   for( int row = 0; row < 3; row++ )
     for( int col = 0; col < 3; col++ )
-      H[ row ][ col ] = V( row * 3 + col, 7 ) / last_val;//H_vector[ row * 3 + col ];// / last_val;
+      H[ row ][ col ] = V( row * 3 + col, svd.nonzeroSingularValues() - 1 ) / last_val;//H_vector[ row * 3 + col ];// / last_val;
 
 	// END TODO
 	return H;

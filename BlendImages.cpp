@@ -331,6 +331,18 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // to take out the vertical drift if this is a 360 panorama
 	// (i.e. is360 is true)
 
+    if( true )
+    {
+      CVector3 top1 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ 0 ].position * CVector3( 0, 0, 1 );
+      printf( "top1: ( %f, %f )\n", top1[ 0 ], top1[ 1 ] );
+      CVector3 top2 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ ipv.size() - 1 ].position * CVector3( 0, 0, 1 );
+      printf( "top2: ( %f, %f )\n", top2[ 0 ], top2[ 1 ] );
+
+      double dy = ( top1[ 1 ] - top2[ 1 ] ) / MAX( top1[ 0 ], top2[ 0 ] );
+      printf( "Shearing distance: %f\n", dy );
+      A[ 1 ][ 0 ] = dy;
+    }
+
 	// END TODO
 
     // Warp and crop the composite
