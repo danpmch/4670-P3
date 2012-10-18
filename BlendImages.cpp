@@ -43,11 +43,14 @@ static int iround(double x) {
 }
 
 // return the minimum number of rows or columns separating this pixel from the border of the image
-int border_distance( CShape shape, int row, int col )
+int border_distance( const CShape &shape, int row, int col )
 {
   printf( "img_row: %d, img_col: %d\n", row, col );
-  int far_border_distance_row = shape.height - row - 1;
-  int far_border_distance_col = shape.width - col - 1;
+  printf( "Img size: (%d, %d)\n", shape.width, shape.height );
+
+  int far_border_distance_row = shape.width - row;
+  int far_border_distance_col = shape.height - col;
+
   printf( "far_border_distance_row: %d,  far_border_distance_col: %d\n", far_border_distance_row, far_border_distance_col );
 
   int min_col_dist = MIN( col, far_border_distance_col );
@@ -93,7 +96,6 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
       // add alpha component to acc
       float alpha = img.PixelLerp( img_row, img_col, 3 ) / 255.0;
 
-      printf( "Img size: (%d, %d)\n", img.Shape().width, img.Shape().height );
       printf( "img_row: %f, img_col: %f\n", img_row, img_col );
       // linearly scale alpha based on pixel's distance from image border
       float b_dist = MIN( border_distance( img.Shape(), iround( img_row ), iround( img_col ) ), blendWidth );
