@@ -312,7 +312,7 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // Allocate the final image shape
 	int outputWidth;
 
-	bool crop = false;  // set to true to crop
+	bool crop = is360;  // set to true to crop
 	if (crop) {
 		outputWidth = mShape.width - width;
 	} else {
@@ -331,7 +331,7 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // to take out the vertical drift if this is a 360 panorama
 	// (i.e. is360 is true)
 
-    if( true )
+    if( is360 )
     {
       CVector3 top1 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ 0 ].position * CVector3( 0, 0, 1 );
       printf( "top1: ( %f, %f )\n", top1[ 0 ], top1[ 1 ] );
