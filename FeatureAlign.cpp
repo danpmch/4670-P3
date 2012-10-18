@@ -52,6 +52,7 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
 	int numMatches = (int) matches.size();
+  assert( numMatches >= 4 );
 
 	// first, we will compute the A matrix in the homogeneous linear equations Ah = 0
 	int numRows = 2 * numMatches; // number of rows of A
@@ -87,7 +88,7 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 //  cout << A << endl << endl;
 
 	// compute the svd of A using the Eigen package
-	JacobiSVD<MatrixType> svd(A, ComputeFullV | ComputeFullU);
+	JacobiSVD<MatrixType> svd(A, ComputeFullV);
 
 	// BEGIN TODO
 	// fill the homography H with the appropriate elements of the SVD
@@ -103,14 +104,6 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
   */
 
   const MatrixType V = svd.matrixV();
-//  cout << "V: " << endl;
-//  cout << V << endl;
-
-  /*
-  Matrix< double, 9, 1 > soln( svd.solve( VectorXd::Zero( A.rows() ) ) );
-  cout << "Solution?" << endl;
-  cout << soln << endl;
-  */
 
 	CTransform3x3 H;
   double last_val = V( 8, svd.nonzeroSingularValues() - 1 );
@@ -229,7 +222,7 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   for( int n = 0; n < nRANSAC; n++ )
   {
     CTransform3x3 current = transform_func( f1, f2, get_random_matches( matches, num_matches ) );
-    printf( "Transform: " ); print_transform( current ); puts( "" );
+//    printf( "Transform: " ); print_transform( current ); puts( "" );
 
     vector< int > inlier_ids;
     int num_inliers = countInliers( f1, f2, matches, m, current, RANSACthresh, inlier_ids );
