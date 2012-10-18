@@ -226,10 +226,10 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
 //      printf( "Max inliers: %d\n", max.size() );
     }
   }
-  /*
+  
   printf( "Total matches: %d\n", matches.size() );
   printf( "Maximum inliers: %d\n", max.size() );
-  */
+  
 
   leastSquaresFit(f1, f2, matches, m, max, M);
 
@@ -360,8 +360,8 @@ int leastSquaresFit(const FeatureSet &f1, const FeatureSet &f2,
           // use this loop to compute the average translation vector
           // over all inliers
           
-          Feature feature1 = f1[ matches[ i ].id1 - 1 ];
-          Feature feature2 = f2[ matches[ i ].id2 - 1 ];
+          Feature feature1 = f1[ matches[ inliers[ i ] ].id1 - 1 ];
+          Feature feature2 = f2[ matches[ inliers[ i ] ].id2 - 1 ];
 
           u += feature2.x - feature1.x;
           v += feature2.y - feature1.y;
