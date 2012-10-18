@@ -42,6 +42,21 @@ static int iround(double x) {
     }
 }
 
+// return the minimum number of rows or columns separating this pixel from the border of the image
+int border_distance( CShape shape, int row, int col )
+{
+  printf( "img_row: %d, img_col: %d\n", row, col );
+  int far_border_distance_row = shape.height - row - 1;
+  int far_border_distance_col = shape.width - col - 1;
+  printf( "far_border_distance_row: %d,  far_border_distance_col: %d\n", far_border_distance_row, far_border_distance_col );
+
+  int min_col_dist = MIN( col, far_border_distance_col );
+  int min_row_dist = MIN( row, far_border_distance_row );
+  int min_border_dist = MIN( min_row_dist, min_col_dist );
+
+  return min_border_dist;
+}
+
 /******************* TO DO *********************
  * AccumulateBlend:
  *	INPUT:
@@ -71,12 +86,21 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
       double img_col = img_pixel[ 1 ];
 
       // make sure reverse projected position is within original shape
-      if( img_pixel[ 0 ] < 0 || img.Shape().width < img_pixel[ 0 ] ||
-          img_pixel[ 1 ] < 0 || img.Shape().height < img_pixel[ 1 ] )
+      if( img_row < 0 || img.Shape().width < img_row ||
+          img_col < 0 || img.Shape().height < img_col )
         continue;
 
       // add alpha component to acc
       float alpha = img.PixelLerp( img_row, img_col, 3 ) / 255.0;
+
+      printf( "Img size: (%d, %d)\n", img.Shape().width, img.Shape().height );
+      printf( "img_row: %f, img_col: %f\n", img_row, img_col );
+      // linearly scale alpha based on pixel's distance from image border
+      float b_dist = MIN( border_distance( img.Shape(), iround( img_row ), iround( img_col ) ), blendWidth );
+      //b_dist = MAX( b_dist, 0.0 );
+
+      alpha *= b_dist / blendWidth;
+      printf( "Border distance: %f,  alpha: %f\n", b_dist, alpha );
 
       /*
       if( img_row < blendWidth )
@@ -312,7 +336,7 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // Allocate the final image shape
 	int outputWidth;
 
-	bool crop = false;  // set to true to crop
+	bool crop = is360;  // set to true to crop
 	if (crop) {
 		outputWidth = mShape.width - width;
 	} else {
@@ -330,6 +354,18 @@ CByteImage BlendImages(CImagePositionV& ipv, float blendWidth)
     // fill in appropriate entries in A to trim the left edge and
     // to take out the vertical drift if this is a 360 panorama
 	// (i.e. is360 is true)
+
+    if( is360 )
+    {
+      CVector3 top1 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ 0 ].position * CVector3( 0, 0, 1 );
+      printf( "top1: ( %f, %f )\n", top1[ 0 ], top1[ 1 ] );
+      CVector3 top2 = CTransform3x3::Translation( -min_x, -min_y ) * ipv[ ipv.size() - 1 ].position * CVector3( 0, 0, 1 );
+      printf( "top2: ( %f, %f )\n", top2[ 0 ], top2[ 1 ] );
+
+      double dy = ( top1[ 1 ] - top2[ 1 ] ) / MAX( top1[ 0 ], top2[ 0 ] );
+      printf( "Shearing distance: %f\n", dy );
+      A[ 1 ][ 0 ] = dy;
+    }
 
 	// END TODO
 

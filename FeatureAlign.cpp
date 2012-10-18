@@ -24,6 +24,12 @@
 
 using namespace Eigen;
 
+#define DEBUG
+#ifndef DEBUG
+  #define printf( ... ) ;
+  #define puts( x ) ;
+#endif
+
 /******************* TO DO *********************
  * ComputeHomography:
  *
@@ -48,6 +54,7 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 {
 	cout << "ComputeHomography" << endl;
 	int numMatches = (int) matches.size();
+  assert( numMatches >= 4 );
 
 	// first, we will compute the A matrix in the homogeneous linear equations Ah = 0
 	int numRows = 2 * numMatches; // number of rows of A
@@ -79,6 +86,8 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 
 		// END TODO
 	}
+//  cout << "A: " << endl;
+//  cout << A << endl << endl;
 
 	// compute the svd of A using the Eigen package
 	JacobiSVD<MatrixType> svd(A, ComputeFullV);
@@ -86,12 +95,23 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 	// BEGIN TODO
 	// fill the homography H with the appropriate elements of the SVD
 	// To extract, for instance, the V matrix, use svd.matrixV()
-  
-  const double *H_vector = svd.matrixV().col( svd.matrixV().cols() - 1 ).data();
+
+  /*
+  cout << "Singular values?" << endl;
+  cout << svd.singularValues() << endl;
+  cout << "Non-zero singular values: " << svd.nonzeroSingularValues() << endl;
+
+  float smallest = svd.singularValues()[ svd.nonzeroSingularValues() - 1 ];
+  cout << "Smallest singular value: " << smallest << endl;
+  */
+
+  const MatrixType V = svd.matrixV();
+
 	CTransform3x3 H;
+  double last_val = V( 8, svd.nonzeroSingularValues() - 1 );
   for( int row = 0; row < 3; row++ )
     for( int col = 0; col < 3; col++ )
-      H[ row ][ col ] = H_vector[ row * 3 + col ];
+      H[ row ][ col ] = V( row * 3 + col, svd.nonzeroSingularValues() - 1 ) / last_val;//H_vector[ row * 3 + col ];// / last_val;
 
 	// END TODO
 	return H;
@@ -214,6 +234,7 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   {
 	cout << "transforming" << endl;
     CTransform3x3 current = transform_func( f1, f2, get_random_matches( matches, num_matches ) );
+//    printf( "Transform: " ); print_transform( current ); puts( "" );
 
     vector< int > inlier_ids;
     int num_inliers = countInliers( f1, f2, matches, m, current, RANSACthresh, inlier_ids );
@@ -222,14 +243,12 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
     if( num_inliers > max.size() )
     {
       max = inlier_ids;
-//      printf( "New Transform: " ); print_transform( current ); puts( "" );
-//      printf( "Max inliers: %d\n", max.size() );
+      printf( "New Transform: " ); print_transform( current ); puts( "" );
+      printf( "Max inliers: %d\n", max.size() );
     }
   }
-  
   printf( "Total matches: %d\n", matches.size() );
   printf( "Maximum inliers: %d\n", max.size() );
-  
 
   leastSquaresFit(f1, f2, matches, m, max, M);
 
@@ -332,7 +351,7 @@ int countInliers(const FeatureSet &f1, const FeatureSet &f2,
  *		f1, f2: source feature sets
  *		matches: correspondences between f1 and f2
  *		m: motion model
- *      inliers: inlier match indices (indexes into 'matches' array)
+ *    inliers: inlier match indices (indexes into 'matches' array)
  *		M: transformation matrix (output)
  *	OUTPUT:
  *		compute the transformation from f1 to f2 using only the inliers
