@@ -59,6 +59,48 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 {
 	// BEGIN TODO
 	// Fill in this routine
+  
+  CTransform3x3 M_inv = M.Inverse();
+  for( int row = 0; row < acc.Shape().width; row++ )
+  {
+    for( int col = 0; col < acc.Shape().height; col++ )
+    {
+      CVector3 acc_pixel( row, col, 1 );
+      CVector3 img_pixel = M_inv * acc_pixel;
+      double img_row = img_pixel[ 0 ];
+      double img_col = img_pixel[ 1 ];
+
+      // make sure reverse projected position is within original shape
+      if( img_pixel[ 0 ] < 0 || img.Shape().width < img_pixel[ 0 ] ||
+          img_pixel[ 1 ] < 0 || img.Shape().height < img_pixel[ 1 ] )
+        continue;
+
+      // add alpha component to acc
+      float alpha = img.PixelLerp( img_row, img_col, 3 ) / 255.0;
+
+      /*
+      if( img_row < blendWidth )
+        alpha *= img_row / blendWidth;
+      else if( img.Shape().height - img_row < blendWidth )
+        alpha *= ( img.Shape().height - img_row ) / blendWidth;
+      if( img_col < blendWidth )
+        alpha *= img_col / blendWidth;
+      else if( img.Shape().width - img_col - 1 < blendWidth )
+        alpha *= ( img.Shape().width - img_col ) / blendWidth;
+        */
+
+      acc.Pixel( row, col, 3 ) += alpha;
+
+      // add alpha premultiplied rgb components to acc
+      for( int channel = 0; channel < img.Shape().nBands - 1; channel++ )
+      {
+        acc.Pixel( row, col, channel ) += img.PixelLerp( img_row, img_col, channel ) * alpha / 255.0;
+      }
+    }
+  }
+
+
+  /*
 
   // convert CByteImage to alpha premultiplied CFloatImage
 	CFloatImage img2( img.Shape() );
@@ -68,6 +110,16 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 		{
       // extract and store alpha value in img2
       float alpha = img.Pixel( row, col, 3 ) / 255.0;
+
+      if( row < blendWidth )
+        alpha *= row / blendWidth;
+      else if( img.Shape().height - row < blendWidth )
+        alpha *= ( img.Shape().height - row ) / blendWidth;
+      else if( col < blendWidth )
+        alpha *= col / blendWidth;
+      else if( img.Shape().width - col < blendWidth )
+        alpha *= ( img.Shape().width - col ) / blendWidth;
+
       img2.Pixel( row, col, 3 ) = alpha;
 
       // store alpha premultiplied rgb values in img2
@@ -94,6 +146,7 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
       }
     }
   }
+  */
 
 	// END TODO
 }
