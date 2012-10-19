@@ -1,0 +1,5 @@
+Daniel McHenry   dpm225
+Joey Triska      jdt84
+
+As far as we can tell, everything involved in producing panoramas using translations works perfectly. However, our homographies do not work correctly. The output
+homography seems to always be effectively a shear matrix which sort of aligns the two images, but not really.
