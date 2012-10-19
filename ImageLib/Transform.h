@@ -18,6 +18,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <cstdio>
+
 class CVector3
 {
 public:
@@ -51,9 +53,22 @@ public:
     CTransform3x3 operator*(const CTransform3x3& m);
     double* operator[](int i);          // access the elements
     const double* operator[](int i) const;    // access the elements
+    void print();
 private:
     double m_array[3][3];               // data array
 };
+
+
+inline void CTransform3x3::print()
+{
+  for( int row = 0; row < 3; row++ )
+  {
+    for( int col = 0; col < 3; col++ )
+    {
+      printf( "%f, ", m_array[ row ][ col ] );
+    }
+  }
+}
 
 inline double* CTransform3x3::operator[](int i)
 {

@@ -24,8 +24,9 @@
 
 using namespace Eigen;
 
-#define DEBUG
+//#define DEBUG
 #ifndef DEBUG
+  // if not in debug mode, define print statements to be empty statements
   #define printf( ... ) ;
   #define puts( x ) ;
 #endif
@@ -52,9 +53,7 @@ using namespace Eigen;
 CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
-	cout << "ComputeHomography" << endl;
 	int numMatches = (int) matches.size();
-  printf( "NumMatches: %d\n", numMatches );
   assert( numMatches >= 4 );
 
 	// first, we will compute the A matrix in the homogeneous linear equations Ah = 0
@@ -87,9 +86,6 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 
 		// END TODO
 	}
-//  cout << "A: " << endl;
-//  cout << A << endl << endl;
-
 	// compute the svd of A using the Eigen package
 	JacobiSVD<MatrixType> svd(A, ComputeFullV);
 
@@ -97,52 +93,43 @@ CTransform3x3 ComputeHomography(const FeatureSet &f1, const FeatureSet &f2,
 	// fill the homography H with the appropriate elements of the SVD
 	// To extract, for instance, the V matrix, use svd.matrixV()
 
-  /*
-  cout << "Singular values?" << endl;
-  cout << svd.singularValues() << endl;
-  cout << "Non-zero singular values: " << svd.nonzeroSingularValues() << endl;
-
-  float smallest = svd.singularValues()[ svd.nonzeroSingularValues() - 1 ];
-  cout << "Smallest singular value: " << smallest << endl;
-  */
-
   const MatrixType V = svd.matrixV();
-  /*
-  const VectorXd col = V.col( svd.nonzeroSingularValues() - 1 );
-  assert( col.magnitude() == 1.0 );
-  */
+
+  if( false )//numMatches > 4 )
+  {
+    cout << "A: " << endl;
+    cout << A << endl << endl;
+
+    cout << "V: " << endl;
+    cout << V << endl << endl;
+
+    cout << "Singular values?" << endl;
+    cout << svd.singularValues() << endl;
+    cout << "Non-zero singular values: " << svd.nonzeroSingularValues() << endl;
+
+    float smallest = svd.singularValues()[ svd.nonzeroSingularValues() - 1 ];
+    cout << "Smallest singular value: " << smallest << endl;
+  }
 
 	CTransform3x3 H;
-  double last_val = V( 8, svd.nonzeroSingularValues() - 1 );
+  double last_val = V( 8, 8 );
   for( int row = 0; row < 3; row++ )
     for( int col = 0; col < 3; col++ )
-      H[ row ][ col ] = V( row * 3 + col, svd.nonzeroSingularValues() - 1 ) / last_val;//H_vector[ row * 3 + col ];// / last_val;
+      H[ row ][ col ] = V( row * 3 + col, 8 ) / last_val;
 
 	// END TODO
 	return H;
 }
 
-void print_transform( CTransform3x3 &t )
-{
-  printf( "[ " );
-  for( int row = 0; row < 3; row++ )
-    for( int col = 0; col < 3; col++ )
-      printf( "%f, ", t[ row ][ col ] );
-  printf( "] " );
-}
-
 CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
 								const vector<FeatureMatch> &matches)
 {
-	cout << "ComputeTranslation" << endl;
   assert( matches.size() == 1 );
-	cout << "matches.size == 1" << endl;
 
   int fid1 = matches[ 0 ].id1;
   int fid2 = matches[ 0 ].id2;
   Feature feature1 = f1[ fid1 - 1 ];
   Feature feature2 = f2[ fid2 - 1 ];
-  cout << "here" << endl;
   int tx = feature2.x - feature1.x;
   int ty = feature2.y - feature1.y;
   CTransform3x3 trans = CTransform3x3::Translation( tx, ty );
@@ -153,19 +140,13 @@ CTransform3x3 ComputeTranslation(const FeatureSet &f1, const FeatureSet &f2,
 // returns a randomly selected subset of the input matches, with size determined by the MotionModel
 vector< FeatureMatch > get_random_matches( const vector< FeatureMatch > &matches, int num_matches )
 {
-	cout << "get_random_matches" << endl;
   set< int > match_indices;
 
   // generate set of random indices
-  cout << "num matches = "<< num_matches << endl;
   while( match_indices.size() < num_matches )
   {
-	cout << "match_indices.size() = " <<  match_indices.size() << endl;
-	cout << "matches.size() = " <<  matches.size() << endl;
     int r = rand() % matches.size();
-	cout << "r = " << r << endl;
-	match_indices.insert( r );
-//    printf( "Using match %d\n", r );
+    match_indices.insert( r );
   }
 
   vector< FeatureMatch > match_subset;
@@ -219,12 +200,10 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   switch( m )
   {
     case eTranslate:
-		cout << "eTranslate" << endl;
       num_matches = 1;
       transform_func = ComputeTranslation;
       break;
     case eHomography:
-		cout << "ehomography" << endl;
       num_matches = 4;
       transform_func = ComputeHomography;
       break;
@@ -237,7 +216,6 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
   srand( time( NULL ) );
   for( int n = 0; n < nRANSAC; n++ )
   {
-	cout << "transforming" << endl;
     CTransform3x3 current = transform_func( f1, f2, get_random_matches( matches, num_matches ) );
 //    printf( "Transform: " ); print_transform( current ); puts( "" );
 
@@ -248,12 +226,11 @@ int alignPair(const FeatureSet &f1, const FeatureSet &f2,
     if( num_inliers > max.size() )
     {
       max = inlier_ids;
-      printf( "New Transform: " ); print_transform( current ); puts( "" );
+//      printf( "New Transform: " ); current.print(); puts( "" );
       printf( "Max inliers: %d\n", max.size() );
     }
   }
-  printf( "Total matches: %d\n", matches.size() );
-  printf( "Maximum inliers: %d\n", max.size() );
+  fprintf( stderr, "num_inliers: %d / %d\n", ( int ) max.size(), ( int ) matches.size() );
 
   leastSquaresFit(f1, f2, matches, m, max, M);
 
@@ -417,6 +394,7 @@ int leastSquaresFit(const FeatureSet &f1, const FeatureSet &f2,
         }
 
         M = ComputeHomography( f1, f2, match_subset );
+//        printf( "M: " ); M.print(); puts( "" );
         // END TODO
 
         break;

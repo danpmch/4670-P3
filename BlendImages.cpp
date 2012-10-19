@@ -33,7 +33,7 @@
 #define MAX(x,y) (((x) < (y)) ? (y) : (x))
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
 
-//#define DEBUG
+#define DEBUG
 #ifndef DEBUG
   #define printf( ... ) ;
   #define puts( x ) ;
@@ -51,13 +51,8 @@ static int iround(double x) {
 // return the minimum number of rows or columns separating this pixel from the border of the image
 int border_distance( const CShape &shape, int row, int col )
 {
-  printf( "img_row: %d, img_col: %d\n", row, col );
-  printf( "Img size: (%d, %d)\n", shape.width, shape.height );
-
   int far_border_distance_row = shape.width - row;
   int far_border_distance_col = shape.height - col;
-
-  printf( "far_border_distance_row: %d,  far_border_distance_col: %d\n", far_border_distance_row, far_border_distance_col );
 
   int min_col_dist = MIN( col, far_border_distance_col );
   int min_row_dist = MIN( row, far_border_distance_row );
@@ -84,6 +79,8 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
 	// BEGIN TODO
 	// Fill in this routine
   
+  printf( "M: " ); M.print(); puts( "" );
+
   CTransform3x3 M_inv = M.Inverse();
   for( int row = 0; row < acc.Shape().width; row++ )
   {
@@ -100,27 +97,10 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
         continue;
 
       // add alpha component to acc
-      float alpha = img.PixelLerp( img_row, img_col, 3 ) / 255.0;
-
-      printf( "img_row: %f, img_col: %f\n", img_row, img_col );
       // linearly scale alpha based on pixel's distance from image border
+      float alpha = img.PixelLerp( img_row, img_col, 3 ) / 255.0;
       float b_dist = MIN( border_distance( img.Shape(), iround( img_row ), iround( img_col ) ), blendWidth );
-      //b_dist = MAX( b_dist, 0.0 );
-
       alpha *= b_dist / blendWidth;
-      printf( "Border distance: %f,  alpha: %f\n", b_dist, alpha );
-
-      /*
-      if( img_row < blendWidth )
-        alpha *= img_row / blendWidth;
-      else if( img.Shape().height - img_row < blendWidth )
-        alpha *= ( img.Shape().height - img_row ) / blendWidth;
-      if( img_col < blendWidth )
-        alpha *= img_col / blendWidth;
-      else if( img.Shape().width - img_col - 1 < blendWidth )
-        alpha *= ( img.Shape().width - img_col ) / blendWidth;
-        */
-
       acc.Pixel( row, col, 3 ) += alpha;
 
       // add alpha premultiplied rgb components to acc
@@ -130,55 +110,6 @@ static void AccumulateBlend(CByteImage& img, CFloatImage& acc, CTransform3x3 M, 
       }
     }
   }
-
-
-  /*
-
-  // convert CByteImage to alpha premultiplied CFloatImage
-	CFloatImage img2( img.Shape() );
-	for( int row = 0; row < img.Shape().width; row++ )
-	{
-		for( int col = 0; col < img.Shape().height; col++ )
-		{
-      // extract and store alpha value in img2
-      float alpha = img.Pixel( row, col, 3 ) / 255.0;
-
-      if( row < blendWidth )
-        alpha *= row / blendWidth;
-      else if( img.Shape().height - row < blendWidth )
-        alpha *= ( img.Shape().height - row ) / blendWidth;
-      else if( col < blendWidth )
-        alpha *= col / blendWidth;
-      else if( img.Shape().width - col < blendWidth )
-        alpha *= ( img.Shape().width - col ) / blendWidth;
-
-      img2.Pixel( row, col, 3 ) = alpha;
-
-      // store alpha premultiplied rgb values in img2
-			for( int channel = 0; channel < img.Shape().nBands - 1; channel++ )
-			{
-				img2.Pixel( row, col, channel ) = img.Pixel( row, col, channel ) * alpha / 255.0;
-			}
-		}
-	}
-
-  // store the warped image in a temporary image
-  CFloatImage tmp( acc.Shape() );
-	CTransform3x3 M_inv = M.Inverse();
-	WarpGlobal( img2, tmp, M_inv, eWarpInterpLinear, 1.0f);
-
-  // add result into acc
-  for( int row = 0; row < acc.Shape().width; row++ )
-  {
-    for( int col = 0; col < acc.Shape().height; col++ )
-    {
-      for( int channel = 0; channel < acc.Shape().nBands; channel++ )
-      {
-        acc.Pixel( row, col, channel ) += tmp.Pixel( row, col, channel );
-      }
-    }
-  }
-  */
 
 	// END TODO
 }
